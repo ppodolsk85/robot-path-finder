@@ -12,6 +12,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import org.jgrapht.alg.DijkstraShortestPath;
+import org.jgrapht.graph.SimpleWeightedGraph;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,15 +58,20 @@ public class PathFinder extends ApplicationAdapter {
 
     private void createVisibilityGraph() {
         visibilityGraph = new VisibilityGraph(start);
+        SimpleWeightedGraph<Point, Segment> g = visibilityGraph.getGraph();
+        g.addVertex(start);
+        g.addVertex(end);
         addFirstOrLastSegments(start);
         addFirstOrLastSegments(end);
         addConnectionsBetweenObstacles();
+        List shortest_path = DijkstraShortestPath.findPathBetween(g, start, end);
+        System.out.println(shortest_path);
     }
 
     private void addConnectionsBetweenObstacles() {
-        for (Point p1: obstaclesVertices) {
-            for (Polygon obstacle: obstacles) {
-                for (Point p2: obstacle.getPoints()) {
+        for (Point p1 : obstaclesVertices) {
+            for (Polygon obstacle : obstacles) {
+                for (Point p2 : obstacle.getPoints()) {
                     if (p1.equals(p2)) {
                         continue;
                     }

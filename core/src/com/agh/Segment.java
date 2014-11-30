@@ -1,11 +1,15 @@
 package com.agh;
 
+import org.jgrapht.graph.DefaultWeightedEdge;
+
 import java.awt.geom.Line2D;
 
-public class Segment {
+public class Segment extends DefaultWeightedEdge {
     private Point leftPoint;
     private Point rightPoint;
     private Polygon polygon;
+
+    public Segment() {}
 
     public Segment(Point leftPoint, Point rightPoint) {
         this.leftPoint = leftPoint;
@@ -74,10 +78,10 @@ public class Segment {
         return true;
     }
 
+
     @Override
-    public int hashCode() {
-        int result = leftPoint.hashCode();
-        result = 31 * result + rightPoint.hashCode();
-        return result;
+    protected double getWeight() {
+        return Math.sqrt((leftPoint.getX() - rightPoint.getX()) * (leftPoint.getX() - rightPoint.getX()) + (leftPoint
+                .getY() - rightPoint.getY()) * (leftPoint.getY() - rightPoint.getY()));
     }
 }
