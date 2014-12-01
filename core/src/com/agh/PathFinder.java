@@ -6,12 +6,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.math.ConvexHull;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.FloatArray;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
@@ -29,9 +31,15 @@ public class PathFinder extends ApplicationAdapter {
     private Point start;
     private Point end;
     private List<Polygon> obstacles = new ArrayList<Polygon>();
+    private List<Polygon> obstaclesAfterMinkowskiSum = new ArrayList<Polygon>();
     private List<Segment> allSegments = new ArrayList<Segment>();
+    private List<Segment> segmentsAfterMinkowskiSum = new ArrayList<Segment>();
     private List<Point> obstaclesVertices = new ArrayList<Point>();
+    private List<Point> obstaclesAfterMinkowskiSumVertices = new ArrayList<Point>();
     private VisibilityGraph visibilityGraph;
+    private int radius = 2;
+    private Polygon robot;
+    private ConvexHull convexHull = new ConvexHull();
 
     @Override
     public void create() {
@@ -69,15 +77,17 @@ public class PathFinder extends ApplicationAdapter {
     }
 
     private void addConnectionsBetweenObstacles() {
-        for (Point p1 : obstaclesVertices) {
-            for (Polygon obstacle : obstacles) {
+//        for (Point p1 : obstaclesVertices) {
+        for (Point p1 : obstaclesAfterMinkowskiSumVertices) {
+            for (Polygon obstacle : obstaclesAfterMinkowskiSum) {
                 for (Point p2 : obstacle.getPoints()) {
                     if (p1.equals(p2)) {
                         continue;
                     }
                     Segment s = new Segment(p1, p2);
                     boolean intersects = false;
-                    for (Segment seg : allSegments) {
+//                    for (Segment seg : allSegments) {
+                    for (Segment seg : segmentsAfterMinkowskiSum) {
                         if (Segment.areCurrentlyConnected(s, seg)) {
                             continue;
                         }
@@ -94,11 +104,13 @@ public class PathFinder extends ApplicationAdapter {
     }
 
     private void addFirstOrLastSegments(Point point) {
-        for (Polygon obstacle : obstacles) {
+//        for (Polygon obstacle : obstacles) {
+        for (Polygon obstacle : obstaclesAfterMinkowskiSum) {
             for (Point p : obstacle.getPoints()) {
                 Segment s = new Segment(p, point);
                 boolean intersects = false;
-                for (Segment seg : allSegments) {
+//                for (Segment seg : allSegments) {
+                for (Segment seg : segmentsAfterMinkowskiSum) {
                     if (Segment.areCurrentlyConnected(s, seg)) {
                         continue;
                     }
@@ -114,7 +126,7 @@ public class PathFinder extends ApplicationAdapter {
     }
 
     private void createTestData() {
-        start = new Point(-50.0d, 20.0d);
+        start = new Point(-80.0d, 20.0d);
         end = new Point(150.0d, -50.0d);
         System.out.println(start);
         System.out.println(end);
@@ -134,6 +146,35 @@ public class PathFinder extends ApplicationAdapter {
             }
             obstaclesVertices.addAll(p.getPoints());
             allSegments.addAll(p.getSegments());
+        }
+        List<Point> robotPoints = new ArrayList<Point>();
+        for (int i = 0; i < 8; i++) {
+            double phi = i * Math.PI / 4;
+            robotPoints.add(new Point(radius * Math.cos(phi), radius * Math.sin(phi)));
+        }
+        robot = new Polygon(robotPoints);
+        performMinkowskiSum();
+    }
+
+    private void performMinkowskiSum() {
+        for (Polygon obstacle : obstacles) {
+            System.out.println(obstacle.getPoints());
+            FloatArray minkowskiSumPoints = new FloatArray();
+            List<Point> newPoints = new ArrayList<Point>();
+            for (Point obstaclePoint : obstacle.getPoints()) {
+                for (Point robotPoint : robot.getPoints()) {
+                    minkowskiSumPoints.add((float) (obstaclePoint.getX() + robotPoint.getX()));
+                    minkowskiSumPoints.add((float) (obstaclePoint.getY() + robotPoint.getY()));
+                }
+            }
+            FloatArray hull = convexHull.computePolygon(minkowskiSumPoints, false);
+            for (int i = 0; i < hull.size; i+= 2) {
+                newPoints.add(new Point((double) hull.get(i), (double) hull.get(i + 1)));
+            }
+            Polygon newObstacle = new Polygon(newPoints);
+            obstaclesAfterMinkowskiSum.add(newObstacle);
+            obstaclesAfterMinkowskiSumVertices.addAll(newObstacle.getPoints());
+            segmentsAfterMinkowskiSum.addAll(newObstacle.getSegments());
         }
     }
 

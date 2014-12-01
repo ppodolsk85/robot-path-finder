@@ -38,7 +38,7 @@ public class VisibilityGraph {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("VisibilityGraph{vertices={");
+        /*StringBuilder sb = new StringBuilder("VisibilityGraph{vertices={");
         for (Point vertex : vertices) {
             sb.append(vertex.toString());
         }
@@ -47,7 +47,11 @@ public class VisibilityGraph {
             sb.append(segment.toString());
         }
         sb.append("}\n");
-        sb.append(String.format("Vertices count: %d Segment count: %d\n", vertices.size(), segments.size()));
+        sb.append(String.format("Vertices count: %d Segment count: %d\n", vertices.size(), segments.size()));*/
+        StringBuilder sb = new StringBuilder();
+        for (Point vertex : vertices) {
+            sb.append(vertex.getX()).append(" ").append(vertex.getY()).append('\n');
+        }
         return sb.toString();
     }
 

@@ -44,4 +44,16 @@ public class Polygon {
     public void setPointCount(int pointCount) {
         this.pointCount = pointCount;
     }
+
+    @Override
+    public String toString() {
+        /*return "Polygon{" +
+                "points=" + points +
+                '}';*/
+        StringBuilder sb = new StringBuilder();
+        for (Point vertex : points) {
+            sb.append(vertex.getX()).append(" ").append(vertex.getY()).append('\n');
+        }
+        return sb.toString();
+    }
 }
